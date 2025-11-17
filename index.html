@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini AI Image Generator</title>
+</head>
+<body>
+  <h1>Gemini AI Image Generator</h1>
+
+  <h2>Generate Image from Text</h2>
+  <input type="text" id="prompt" placeholder="Enter prompt" size="50">
+  <button onclick="generate()">Generate</button>
+  <div id="gen-result"></div>
+
+  <h2>Edit Image</h2>
+  <input type="file" id="editImage">
+  <input type="text" id="editPrompt" placeholder="Enter edit prompt">
+  <button onclick="editImage()">Edit</button>
+  <div id="edit-result"></div>
+
+  <script>
+    async function generate() {
+      const prompt = document.getElementById("prompt").value;
+      const res = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      if (data.imagePath) {
+        document.getElementById("gen-result").innerHTML = `
+          <p>${data.message}</p>
+          <img src="${data.imagePath}" width="400">
+          <br><a href="/download/${data.imagePath}" target="_blank">Download</a>
+        `;
+      } else {
+        document.getElementById("gen-result").innerText = data.error;
+      }
+    }
+
+    async function editImage() {
+      const file = document.getElementById("editImage").files[0];
+      const prompt = document.getElementById("editPrompt").value;
+      const form = new FormData();
+      form.append("image", file);
+      form.append("prompt", prompt);
+
+      const res = await fetch("/edit", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.editedPath) {
+        document.getElementById("edit-result").innerHTML = `
+          <p>${data.message}</p>
+          <img src="${data.editedPath}" width="400">
+          <br><a href="/download/${data.editedPath}" target="_blank">Download</a>
+        `;
+      } else {
+        document.getElementById("edit-result").innerText = data.error;
+      }
+    }
+  </script>
+</body>
+</html>
