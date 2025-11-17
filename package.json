@@ -1,8 +1,6 @@
 {
-  "name": "gemini-image-app",
+  "name": "gemini-ai-image-app",
   "version": "1.0.0",
-  "description": "Express app for Google Gemini AI image generation",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
