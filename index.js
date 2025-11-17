@@ -12,10 +12,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Multer setup for file upload
+// Multer setup for image upload
 const upload = multer({ dest: "uploads/" });
 
-// Google GenAI
+// Google GenAI (AI Studio API Key)
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
@@ -31,20 +31,20 @@ function saveBase64Image(base64Data, prefix = "image") {
 
 // ---------------- Routes ----------------
 
-// Home
+// Home page
 app.get("/", (req, res) => {
   res.sendFile(path.join(process.cwd(), "index.html"));
 });
 
-// Generate image from text
+// Text → Image
 app.post("/generate", async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+    if (!prompt) return res.status(400).json({ error: "Prompt required" });
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
-      contents: [{ text: prompt }],
+      contents: [{ text: prompt }]
     });
 
     let imagePath = null;
@@ -63,7 +63,7 @@ app.post("/generate", async (req, res) => {
   }
 });
 
-// Edit image + text prompt
+// Image → Image Edit
 app.post("/edit", upload.single("image"), async (req, res) => {
   try {
     const { prompt } = req.body;
@@ -73,12 +73,12 @@ app.post("/edit", upload.single("image"), async (req, res) => {
 
     const contents = [
       { text: prompt },
-      { inlineData: { mimeType: "image/png", data: base64Image } },
+      { inlineData: { mimeType: "image/png", data: base64Image } }
     ];
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
-      contents,
+      contents
     });
 
     let editedPath = null;
@@ -88,8 +88,7 @@ app.post("/edit", upload.single("image"), async (req, res) => {
       }
     }
 
-    // Cleanup uploaded temp file
-    fs.unlinkSync(req.file.path);
+    fs.unlinkSync(req.file.path); // remove temp upload
 
     if (!editedPath) return res.status(500).json({ error: "No edited image returned" });
 
